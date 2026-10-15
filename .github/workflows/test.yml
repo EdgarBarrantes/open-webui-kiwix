@@ -1,0 +1,27 @@
+name: test
+on: [push, pull_request]
+jobs:
+  kiwix:
+    name: tool against kiwix-serve ${{ matrix.kiwix }}
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        kiwix: ["3.8.1", "latest"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests pydantic
+      - run: tests/run.sh
+        env:
+          KIWIX_IMAGE: ghcr.io/kiwix/kiwix-serve:${{ matrix.kiwix }}
+  open-webui:
+    name: loads in Open WebUI ${{ matrix.version }}
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        version: ["v0.12.0", "v0.11.4", "v0.10.2"]
+    steps:
+      - uses: actions/checkout@v4
+      - run: tests/openwebui.sh ${{ matrix.version }}

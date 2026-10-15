@@ -1,0 +1,37 @@
+# kiwix-serve next to Open WebUI, on the same Docker network, so the tool's
+# default kiwix_url (http://kiwix:8080) works as is.
+#
+#   1. Put your .zim files in ./zim (download them from https://library.kiwix.org)
+#   2. docker compose up -d
+#   3. Open WebUI on http://localhost:3000, your library on http://localhost:8080
+#      (set the tool's public_url to http://localhost:8080 so the links in
+#      answers open in your browser)
+#
+# Already running Open WebUI? Add only the kiwix service to its compose file
+# (or put both containers on a shared network).
+services:
+  kiwix:
+    image: ghcr.io/kiwix/kiwix-serve:3.8.1
+    container_name: kiwix
+    command: "*.zim"          # every ZIM in the folder; restart after adding one
+    volumes:
+      - ./zim:/data:ro
+    ports:
+      - "127.0.0.1:8080:8080"
+    restart: unless-stopped
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:v0.12.0
+    container_name: open-webui
+    environment:
+      OLLAMA_BASE_URL: http://host.docker.internal:11434   # your Ollama
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - open-webui:/app/backend/data
+    ports:
+      - "127.0.0.1:3000:8080"
+    restart: unless-stopped
+
+volumes:
+  open-webui:
